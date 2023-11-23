@@ -49,7 +49,7 @@ const gantt = new Gantt({
         tasksData : [
             {
                 id       : 2,
-                name     : 'Sprøytebetong',
+                name     : '1 Bolter',
                 expanded : false,
                 children : bolt1Kids
             }

@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/jornkri/VeidekkeGant#readme",
   "dependencies": {
-    "@bryntum/gantt-trial": "^5.6.1"
+    "@bryntum/gantt-trial": "^5.6.1",
+    "uuid": "^9.0.1"
   }
 }

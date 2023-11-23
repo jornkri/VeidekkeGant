@@ -12,12 +12,7 @@ async function getActivity(url="https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A
     });
 
     const response = await fetch(`${url}?${params}`, {
-        method: "GET",
-        mode: "cors",
-        headers:{
-            "Content-Type": "application/json"
-        },
-
+        method: "GET"
     })
 
     return response.json();

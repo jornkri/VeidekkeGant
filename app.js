@@ -13,10 +13,10 @@ async function getBolts(url="https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A/ar
 
     const response = await fetch(`${url}?${params}`, {
         method: "GET",
-        mode: "cors",
-        headers:{
-            "Content-Type": "application/json"
-        },
+        // mode: "cors",
+        // headers:{
+        //     "Content-Type": "application/json"
+        // },
 
     })
 

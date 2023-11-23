@@ -19,7 +19,7 @@ async function getActivity(url="https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A
 }
 
 
-const sBetongData = await getActivity("https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A/arcgis/rest/services/Basrapport%20Aktivitet/FeatureServer/0/query", {where: "aktivitet = '1 Sprøytebetong'"});
+const sBetongData = await getActivity("https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A/arcgis/rest/services/Basrapport%20Aktivitet/FeatureServer/0/query", {where: "aktivitet = '1 Sprøytebetong' AND fra_tidspunkt < til_tidspunkt"});
 const sBetongKids = sBetongData.features.map(ft => ({id: ft.attributes.OBJECTID, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_tidspunkt), endDate: new Date(ft.attributes.til_tidspunkt)}))
 
 const bolt1Data = await getActivity("https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A/arcgis/rest/services/Basrapport%20Aktivitet/FeatureServer/0/query", {where: "aktivitet = '1 Bolter'"});

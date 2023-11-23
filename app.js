@@ -40,9 +40,7 @@ const gantt = new Gantt({
                 name     : 'Sprøytebetong',
                 expanded : false,
                 children : sBetongKids
-            }
-        ],
-        tasksData : [
+            },
             {
                 id       : 2,
                 name     : '1 Bolter',

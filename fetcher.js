@@ -21,4 +21,10 @@ async function getBolts(url="https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A/ar
 const feats = await getBolts();
 const kids = feats.features.map(ft => ({id: ft.attributes.OBJECTID, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_tidspunkt), endDate: new Date(ft.attributes.til_tidspunkt)}))
 
-console.log(kids)
+const start_timestamps = feats.features.map(ft => ft.attributes.fra_tidspunkt)
+const end_timestamps = feats.features.map(ft => ft.attributes.til_tidspunkt)
+
+console.log(Math.max(...start_timestamps))
+//console.log(end_timestamps)
+
+//console.log(kids)

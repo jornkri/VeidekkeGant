@@ -29,7 +29,7 @@ const kids = feats.features.map(ft => ({id: ft.attributes.OBJECTID, name:ft.attr
 const gantt = new Gantt({
     appendTo : document.body,
 
-    startDate : new Date(2022, 0, 1),
+    startDate : new Date(2022, 9, 24),
     endDate   : Date.now(),
 
     project : {

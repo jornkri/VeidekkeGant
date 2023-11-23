@@ -6,7 +6,7 @@ import { Gantt } from './gantt.module.js';
 async function getBolts(url="https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A/arcgis/rest/services/Basrapport%20Aktivitet/FeatureServer/0/query", data={}){
     const params = new URLSearchParams({
         returnGeometry: "false",
-        where: "aktivitet = '1 Bolter'",
+        where: data.where, //"aktivitet = '1 Bolter'",
         outFields: "fra_tidspunkt, til_tidspunkt, aktivitet, antall, OBJECTID",
         f: "json"
     });
@@ -23,13 +23,17 @@ async function getBolts(url="https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A/ar
     return response.json();
 }
 
-const feats = await getBolts();
-const kids = feats.features.map(ft => ({id: ft.attributes.OBJECTID, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_tidspunkt), endDate: new Date(ft.attributes.til_tidspunkt)}))
+const sBetongData = await getActivity("https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A/arcgis/rest/services/Basrapport%20Aktivitet/FeatureServer/0/query", {where: "aktivitet = '1 Sprøytebetong'"});
+const sBetongKids = sBetongData.features.map(ft => ({id: ft.attributes.OBJECTID, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_tidspunkt), endDate: new Date(ft.attributes.til_tidspunkt)}))
+
+const bolt1Data = await getActivity("https://services-eu1.arcgis.com/eePcGuRGPyGzmI0A/arcgis/rest/services/Basrapport%20Aktivitet/FeatureServer/0/query", {where: "aktivitet = '1 Bolter'"});
+const bolt1Kids = bolt1Data.features.map(ft => ({id: ft.attributes.OBJECTID, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_tidspunkt), endDate: new Date(ft.attributes.til_tidspunkt)}))
+
 
 const gantt = new Gantt({
     appendTo : document.body,
 
-    startDate : new Date(2022, 9, 24),
+    startDate : new Date(2022, 8, 24),
     endDate   : Date.now(),
 
     project : {
@@ -37,9 +41,17 @@ const gantt = new Gantt({
         tasksData : [
             {
                 id       : 1,
-                name     : 'Bolter',
-                expanded : true,
-                children : kids
+                name     : 'Sprøytebetong',
+                expanded : false,
+                children : sBetongKids
+            }
+        ],
+        tasksData : [
+            {
+                id       : 2,
+                name     : 'Sprøytebetong',
+                expanded : false,
+                children : bolt1Kids
             }
         ],
 

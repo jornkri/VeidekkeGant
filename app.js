@@ -19,10 +19,10 @@ async function getActivity(url="https://veidekke.cloudgis.no/enterprise/rest/ser
 }
 
 
-const boltmonteringData = await getActivity("https://veidekke.cloudgis.no/enterprise/rest/services/Hosted/Basrapport/FeatureServer/0/query", {where: "aktivitiet = 'Boltemontering' AND fra_klokken < til_tidspunkt"});
+const boltmonteringData = await getActivity("https://veidekke.cloudgis.no/enterprise/rest/services/Hosted/Basrapport/FeatureServer/0/query", {where: "aktivitiet = 'Boltemontering' AND fra_klokken < til_klokken"});
 const boltmonteringKids = boltmonteringData.features.map(ft => ({id: ft.attributes.objectid, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_klokken), endDate: new Date(ft.attributes.til_klokken), manuallyScheduled: true}))
 
-const boringData = await getActivity("https://veidekke.cloudgis.no/enterprise/rest/services/Hosted/Basrapport/FeatureServer/0/query", {where: "aktivitiet = 'Boring' AND fra_tidspunkt < til_tidspunkt"});
+const boringData = await getActivity("https://veidekke.cloudgis.no/enterprise/rest/services/Hosted/Basrapport/FeatureServer/0/query", {where: "aktivitiet = 'Boring' AND fra_klokken < til_klokken"});
 const boringKids = boringData.features.map(ft => ({id: ft.attributes.objectid, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_klokken), endDate: new Date(ft.attributes.til_klokken), manuallyScheduled: true}))
 
 

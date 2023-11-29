@@ -1,83 +1,341 @@
 
 import { Gantt } from './gantt.module.js';
-
-//const gantt = new Gantt({/*...*/ });
-
-async function getActivity(url="https://veidekke.cloudgis.no/enterprise/rest/services/Hosted/Basrapport/FeatureServer/0/query", data={}){
-    const params = new URLSearchParams({
-        returnGeometry: "false",
-        where: data.where,//"aktivitet = '1 Bolter'",
-        outFields: "fra_klokken, til_klokken, aktivitet, varighet , aktivet_label, objectid" ,
-        f: "json"
-    });
-
-    const response = await fetch(`${url}?${params}`, {
-        method: "GET"
-    })
-
-    return response.json();
-}
+import { DateHelper, SchedulerPro, StringHelper, EditorTab, Toast, EventModel } from './schedulerpro.module.js';
+import {resources, events, assignments} from './schedulerEventData.js';
 
 
-const boltmonteringData = await getActivity("https://veidekke.cloudgis.no/enterprise/rest/services/Hosted/Basrapport/FeatureServer/0/query", {where: "aktivitiet = 'Boltemontering' AND fra_klokken < til_klokken"});
-const boltmonteringKids = boltmonteringData.features.map(ft => ({id: ft.attributes.objectid, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_klokken), endDate: new Date(ft.attributes.til_klokken), manuallyScheduled: true}))
-
-const boringData = await getActivity("https://veidekke.cloudgis.no/enterprise/rest/services/Hosted/Basrapport/FeatureServer/0/query", {where: "aktivitiet = 'Boring' AND fra_klokken < til_klokken"});
-const boringKids = boringData.features.map(ft => ({id: ft.attributes.objectid, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_klokken), endDate: new Date(ft.attributes.til_klokken), manuallyScheduled: true}))
 
 
-// async function getActivity(url="https://services.arcgis.com/2JyTvMWQSnM2Vi8q/arcgis/rest/services/testdata_Gantdiagram/FeatureServer/0/query", data={}){
-//     const params = new URLSearchParams({
-//         returnGeometry: "false",
-//         where: data.where,//"aktivitet = '1 Bolter'",
-//         outFields: "fra_tidspunkt, til_tidspunkt, aktivitet, antall, aktivet_label, OBJECTID_1" ,
-//         f: "json"
-//     });
-
-//     const response = await fetch(`${url}?${params}`, {
-//         method: "GET"
-//     })
-
-//     return response.json();
-// }
-
-
-// const sBetongData = await getActivity("https://services.arcgis.com/2JyTvMWQSnM2Vi8q/arcgis/rest/services/testdata_Gantdiagram/FeatureServer/0/query", {where: "aktivitet = 'Sprøytebetong' AND fra_tidspunkt < til_tidspunkt"});
-// const sBetongKids = sBetongData.features.map(ft => ({id: ft.attributes.OBJECTID_1, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_tidspunkt), endDate: new Date(ft.attributes.til_tidspunkt), manuallyScheduled: true}))
-
-// const bolt1Data = await getActivity("https://services.arcgis.com/2JyTvMWQSnM2Vi8q/arcgis/rest/services/testdata_Gantdiagram/FeatureServer/0/query", {where: "aktivitet = 'Bolt' AND fra_tidspunkt < til_tidspunkt"});
-// const bolt1Kids = bolt1Data.features.map(ft => ({id: ft.attributes.OBJECTID_1, name:ft.attributes.aktivitet, startDate: new Date(ft.attributes.fra_tidspunkt), endDate: new Date(ft.attributes.til_tidspunkt), manuallyScheduled: true, eventColor : 'violet'}))
-
-
-console.log(boltmonteringKids)
-console.log(boringKids)
-const gantt = new Gantt({
-    appendTo : document.body,
-
-    startDate : new Date(2022, 10, 1),
-    endDate   : Date.now(),
-    project : {
-
-        tasksData : [
-            {
-                id       : 'Sproytebetong',
-                name     : 'Sprøytebetong',
-                expanded : true,
-                startDate: new Date(2022, 10, 1),
-                segments   : boltmonteringKids
-            },
-            {
-                id       : 'boring',
-                name     : 'Boring',
-                expanded : true,
-                startDate: new Date(2022, 10, 1),
-                segments : boringKids
-            }
-        ],
 
     
+// Ensure that the Tooltip shows nested events them in temporal order
+const byStartDate = (leftSubEvent, rightSubEvent) => leftSubEvent.startDate - rightSubEvent.startDate;
 
-    columns : [
-        { type : 'name', width : 160 }
-    ]
-}});
+// SchedulerPro subclass using nested events
+class SchedulerWithSubtasks extends SchedulerPro {
+
+    static $name  = 'SchedulerWithSubtasks';
+
+    static type =  'schedulerwithsubtasks';
+
+    static configurable = {
+        features : {
+            taskEdit : {
+                editorConfig : {
+                    width : '50em'
+                },
+                items : {
+                    subTaskTab : {
+                        type   : 'subtasktab',
+                        weight : 110
+                    }
+                }
+            },
+
+            eventTooltip : {
+                // Custom tooltip template, to display info on nested events when hovering a parent
+                template : data => `
+                    ${data.eventRecord.name ? `<div class="b-sch-event-title">${StringHelper.encodeHtml(data.eventRecord.name)}</div>` : ''}
+                    ${data.startClockHtml}
+                    ${data.endClockHtml}
+                    ${data.eventRecord.children ? '</br>' + data.eventRecord.children.slice().sort(byStartDate).map(r => `
+                    <h4 class="b-tooltip-subevent-title">${StringHelper.encodeHtml(r.name)}</h4>
+                    ${DateHelper.format(r.startDate, 'LT')} - ${DateHelper.format(r.endDate, 'LT')}
+                `).join('') : ''}
+                `
+            },
+
+            nestedEvents : {
+                // Don't allow dragging nested events out of their parents
+                constrainDragToParent : true
+            },
+
+            dependencies : false
+        },
+
+        // Disable initial animations, for less flickering when recreating the scheduler when toggling between modes
+        useInitialAnimation : false,
+
+        listeners : {
+            // Only use the Subtask tab for parent events
+            beforeTaskEditShow({ taskRecord, editor }) {
+                editor.widgetMap.subTaskTab.disabled = !taskRecord.isParent;
+            }
+        }
+    };
+}
+
+// Register this widget type with its Factory
+SchedulerWithSubtasks.initClass();
+
+/**
+ * Extra Tab for TaskEditor to manage subtasks
+ *
+ * @extends SchedulerPro/widget/taskeditor/EditorTab
+ */
+class SubtaskTab extends EditorTab {
+
+    static get $name() {
+        return 'SubtaskTab';
+    }
+
+    static get type() {
+        return 'subtasktab';
+    }
+
+    static get defaultConfig() {
+        return {
+            title            : 'Subtasks',
+            cls              : 'b-tab-subtasks',
+            autoUpdateRecord : false,
+            layoutStyle      : {
+                flexFlow : 'column nowrap'
+            },
+            items : {
+                subEvents : {
+                    type  : 'grid',
+                    name  : 'subEvents',
+                    flex  : '1 1 auto',
+                    width : '100%',
+                    store : {
+                        sorters    : [{ field : 'startDate', ascending : true }],
+                        modelClass : EventModel
+                    },
+                    columns : [
+                        { field : 'name', text : 'Name', flex : 1 },
+                        {
+                            field  : 'startDate',
+                            text   : 'Start date',
+                            flex   : 1,
+                            type   : 'date',
+                            format : 'YYYY-MM-DD hh:mm A',
+                            editor : {
+                                type      : 'datetimefield',
+                                timeField : {
+                                    stepTriggers : false
+                                },
+                                dateField : {
+                                    stepTriggers : false
+                                }
+                            }
+                        },
+                        {
+                            field  : 'endDate',
+                            text   : 'End date',
+                            flex   : 1,
+                            type   : 'date',
+                            format : 'YYYY-MM-DD hh:mm A',
+                            editor : {
+                                type      : 'datetimefield',
+                                timeField : {
+                                    stepTriggers : false
+                                },
+                                dateField : {
+                                    stepTriggers : false
+                                }
+                            }
+                        }
+                    ]
+                },
+                toolbar : {
+                    type       : 'toolbar',
+                    flex       : '0 0 auto',
+                    cls        : 'b-compact-bbar',
+                    namedItems : {
+                        add : {
+                            type    : 'button',
+                            cls     : 'b-add-button b-green',
+                            icon    : 'b-icon b-icon-add',
+                            tooltip : 'Add new subtask',
+                            onClick : 'up.onAddClick'
+                        },
+                        remove : {
+                            type    : 'button',
+                            cls     : 'b-remove-button b-red',
+                            icon    : 'b-icon b-icon-trash',
+                            tooltip : 'Delete selected subtask',
+                            onClick : 'up.onDeleteClick'
+                        }
+                    },
+                    items : {
+                        add    : true,
+                        remove : true
+                    }
+                }
+            }
+        };
+    }
+
+    construct() {
+        super.construct(...arguments);
+
+        this.grid = this.widgetMap.subEvents;
+
+        this.grid.store.on({
+            change  : 'onStoreChange',
+            thisObj : this
+        });
+    }
+
+    // go through all sub events and try to find the first available space that may be used to add a new sub event
+    findEarliestUnallocatedTimeSlot(parentEvent) {
+        const
+            subEvents               = parentEvent.children.slice(),
+            { endDate : parentEnd } = parentEvent;
+
+        let { startDate } = parentEvent,
+            // use 1 hour duration by default
+            endDate       = DateHelper.add(startDate, 1, 'hour');
+
+        // subEvents should be sorted by startDate to make sure we will not skip any free space
+        subEvents.sort((r1, r2) => r1.startDate - r2.startDate);
+
+        for (const nestedEvent of subEvents) {
+            const
+                nestedStartDate = nestedEvent.startDate,
+                nestedEndDate   = nestedEvent.endDate;
+
+            // if intercepting with startDate, use endDate of nested event
+            if (nestedStartDate.getTime() === startDate.getTime() ||
+                nestedStartDate < startDate &&
+                nestedEndDate > startDate
+            ) {
+                startDate = nestedEndDate;
+                endDate   = DateHelper.add(startDate, 1, 'hour');
+            }
+            else if (nestedStartDate < endDate) {
+                endDate = nestedStartDate;
+            }
+            else if (parentEnd < endDate) {
+                endDate = parentEnd;
+            }
+            if (startDate >= parentEnd) {
+                startDate = endDate = parentEnd;
+            }
+            else if (endDate >= parentEnd) {
+                endDate = parentEnd;
+            }
+        }
+
+        // no free space found
+        if (startDate.getTime() === endDate.getTime()) {
+            return null;
+        }
+
+        return { startDate, endDate };
+    }
+
+    // Make changes in the grid reflect on the parent event being edited.
+    // Editing fields reflect automatically since child events are edited directly, but add / remove must be handled.
+    onStoreChange({ action, records }) {
+        const { record } = this;
+
+        if (action === 'remove') {
+            record.removeChild(records);
+        }
+        else if (action === 'add') {
+            record.appendChild(records);
+        }
+    }
+
+    onAddClick() {
+        const timeSlot = this.findEarliestUnallocatedTimeSlot(this.record);
+
+        if (!timeSlot) {
+            Toast.show('No unallocated time slot could be found in the main event');
+            return;
+        }
+
+        const
+            { startDate, endDate } = timeSlot,
+            [added]              = this.grid.store.add({
+                name : 'New subtask',
+                startDate,
+                endDate
+            });
+
+        // Assign the new event to the same resource as its parent, otherwise it won't show up
+        added.assign(this.record.resource);
+
+        this.grid.startEditing(added);
+    }
+
+    onDeleteClick() {
+        const
+            { grid }       = this,
+            selectedRecord = grid.selectedRecord;
+
+        grid.features.cellEdit.cancelEditing(true);
+        selectedRecord && grid.store.remove(selectedRecord);
+    }
+
+    set record(record) {
+        super.record = record;
+
+        if (record) {
+            this.grid.store.loadData(record.children || []);
+        }
+        else {
+            // make sure cellEditor is hidden to prevent show it up on taskEdit reopen
+            this.grid.features.cellEdit.finishEditing();
+        }
+    }
+
+    get record() {
+        return super.record;
+    }
+}
+
+// Register this widget type with its Factory
+SubtaskTab.initClass();
+
+let scheduler;
+
+// Cannot toggle mode between horizontal and vertical at runtime, so need to destroy and recreate the scheduler
+function createScheduler(mode) {
+    const isHorizontal = mode === 'horizontal';
+
+    scheduler?.destroy?.();
+
+    // Create a new scheduler from the custom subclass, see SchedulerWithSubtasks
+    scheduler = new SchedulerWithSubtasks({
+        appendTo          : 'container',
+        resourceImagePath : '../_shared/images/users/',
+        startDate         : new Date(2023, 8, 29, 7),
+        endDate           : new Date(2023, 11, 29, 21),
+        viewPreset        : 'hourAndDay',
+        rowHeight         : 90,
+        barMargin         : 10,
+        // Columns are only applicable in horizontal mode
+        columns           : isHorizontal ? [
+            { type : 'resourceInfo', text : 'Aktivitet', field : 'name', width : 130 },
+            { type : 'rating', text : 'Fremdrift', field : 'rating' }
+        ] : [],
+        project : {           
+            // autoLoad : true,
+            // success : true,
+            resourcesData : resources.resources,
+            eventsData: events.eventData,
+            assignmentsData: assignments.assignmentsData    
+        
+        },
+        mode,
+        tbar : [
+            {
+                type        : 'buttongroup',
+                toggleGroup : true,
+                items       : {
+                    horizontal : { text : 'Horizontal mode', icon : 'b-fa-left-right', pressed : isHorizontal },
+                    vertical   : { text : 'Vertical mode', icon : 'b-fa-up-down', pressed : !isHorizontal }
+                },
+                onToggle({ pressed, source }) {
+                    if (pressed) {
+                        createScheduler(source.ref);
+                    }
+                }
+            }
+        ]
+    });
+}
+
+createScheduler('horizontal');

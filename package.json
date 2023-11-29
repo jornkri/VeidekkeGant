@@ -22,6 +22,8 @@
   "homepage": "https://github.com/jornkri/VeidekkeGant#readme",
   "dependencies": {
     "@bryntum/gantt-trial": "^5.6.1",
+    "@bryntum/schedulerpro": "npm:@bryntum/schedulerpro-trial@^5.6.2",
+    "dayjs": "^1.11.10",
     "uuid": "^9.0.1"
   }
 }

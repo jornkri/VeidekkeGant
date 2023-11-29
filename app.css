@@ -1,0 +1,15 @@
+.custom-styling .b-sch-event-segments {
+    height: 100%;
+    border-bottom: none;
+    background: rgba(187, 187, 187, 0.2509803922);
+    border-radius: 2px;
+  }
+  .custom-styling .b-gantt-task-wrap .b-gantt-task,
+  .custom-styling .b-gantt-task.b-sch-event-segments .b-sch-event-segment {
+    --event-background-color: #7dc9b2;
+  }
+  .custom-styling .b-gantt-task-parent .b-gantt-task:not(.b-milestone) {
+    background-color: #7ad0f4;
+  }
+  
+  

@@ -1,9 +1,7 @@
 
 import { Gantt } from './gantt.module.js';
-import { DateHelper, SchedulerPro, StringHelper, EditorTab, Toast, EventModel } from './schedulerpro.module.js';
+import { DateHelper, SchedulerPro, StringHelper, EditorTab, Toast, EventModel, DatePicker } from './schedulerpro.module.js';
 import {resources, events, assignments} from './schedulerEventData.js';
-
-
 
 
 
@@ -321,21 +319,39 @@ function createScheduler(mode) {
         },
         mode,
         tbar : [
+            
             {
                 type        : 'buttongroup',
                 toggleGroup : true,
                 items       : {
                     horizontal : { text : 'Horizontal mode', icon : 'b-fa-left-right', pressed : isHorizontal },
-                    vertical   : { text : 'Vertical mode', icon : 'b-fa-up-down', pressed : !isHorizontal }
+                    vertical   : { text : 'Vertical mode', icon : 'b-fa-up-down', pressed : !isHorizontal },
                 },
                 onToggle({ pressed, source }) {
                     if (pressed) {
                         createScheduler(source.ref);
                     }
                 }
-            }
-        ]
+            }, 
+            {
+                type     : 'datefield',
+                ref      : 'dateField',
+                width    : 190,
+                editable : false,
+                step     : 1,
+                onChange : 'up.onDateFieldChange'
+            },
+                
+        ],
+        
+        onDateFieldChange({ value, userAction }) {
+            userAction && this.setTimeSpan(DateHelper.add(value, 8, 'hour'), DateHelper.add(value, 20, 'hour'));
+        }
     });
+    
+    
+    
+    
 }
 
 createScheduler('horizontal');

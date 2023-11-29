@@ -126,7 +126,6 @@ const activities = await getDistinctActivities(testUrl);
 
 const resourcesData = activities.map((act) => {return {id: activities.indexOf(act) + 1 , name: act}});
 const resources = {
-    //success : true,
     resources : resourcesData
         
     
@@ -138,11 +137,6 @@ const eventData = await makeEventData(activities)
 const events = {eventData
 }
 console.log('events:', events)
-// const assignmentsData = resourcesData.map((res) => {
-//     return {
-//         id: res.id, event: res.id, resource: res.id
-//     }
-// })
 
 function makeAssignmentsFromEventData(eventData){
     const rows = [];
@@ -172,14 +166,10 @@ const activities = await getDistinctActivities(testUrl);
 
 const resourcesData = activities.map((act) => {return {id: activities.indexOf(act) + 1 , name: act}});
 const resources = {
-    //success : true,
     resources : resourcesData
-        
-    
-}
-
-return resources;
-}
+        }
+        return resources;
+    }
 
 console.log('assignments:', assignments)
 

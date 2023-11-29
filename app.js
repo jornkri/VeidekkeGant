@@ -300,8 +300,8 @@ function createScheduler(mode) {
     // Create a new scheduler from the custom subclass, see SchedulerWithSubtasks
     scheduler = new SchedulerWithSubtasks({
         appendTo          : 'container',
-        resourceImagePath : '../_shared/images/users/',
-        startDate         : new Date(2023, 8, 29, 7),
+        resourceImagePath : '../icons/',
+        startDate         : new Date(2023, 9, 29, 7),
         endDate           : new Date(2023, 11, 29, 21),
         viewPreset        : 'hourAndDay',
         rowHeight         : 90,

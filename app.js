@@ -1,6 +1,6 @@
 
 import { Gantt } from './gantt.module.js';
-import { DateHelper, SchedulerPro, StringHelper, EditorTab, Toast, EventModel, DatePicker } from './schedulerpro.module.js';
+import { DateHelper, Model, Combo, SchedulerPro, StringHelper, EditorTab, Toast, EventModel, DatePicker, Splitter, Panel } from './schedulerpro.module.js';
 import {resources, events, assignments} from './schedulerEventData.js';
 
 
@@ -286,6 +286,12 @@ class SubtaskTab extends EditorTab {
 
 // Register this widget type with its Factory
 SubtaskTab.initClass();
+class MapPanel extends Panel {
+    // Factoryable type name
+    static get type() {
+        return 'mappanel';
+    };
+};
 
 let scheduler;
 
@@ -316,6 +322,20 @@ function createScheduler(mode) {
             eventsData: events.eventData,
             assignmentsData: assignments.assignmentsData    
         
+        },
+        listeners : {
+            eventClick : ({ eventRecord }) => {
+                // When an event bar is clicked, bring the marker into view and show a tooltip
+                if (eventRecord.marker) {
+                    mapPanel?.showTooltip(eventRecord, true);
+                }
+            },
+
+            afterEventSave : ({ eventRecord }) => {
+                if (eventRecord.marker) {
+                    mapPanel?.scrollMarkerIntoView(eventRecord);
+                }
+            }
         },
         mode,
         tbar : [
@@ -348,10 +368,32 @@ function createScheduler(mode) {
             userAction && this.setTimeSpan(DateHelper.add(value, 8, 'hour'), DateHelper.add(value, 20, 'hour'));
         }
     });
+
+    new Splitter({
+        appendTo : 'container'
+    });
     
     
     
     
 }
+
+
+let mapPanel;
+
+mapPanel = new MapPanel({
+    ref        : 'map',
+    appendTo   : 'mapView',
+    flex       : 2,
+    // eventStore : scheduler.eventStore,
+    // timeAxis   : scheduler.timeAxis,
+    listeners  : {
+        // When a map marker is clicked, scroll the event bar into view and highlight it
+        markerclick : async({ eventRecord }) => {
+            await scheduler.scrollEventIntoView(eventRecord, { animate : true, highlight : true });
+            scheduler.selectedEvents = [eventRecord];
+        }
+    }
+});
 
 createScheduler('horizontal');

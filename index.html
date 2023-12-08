@@ -1,25 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>Veidekke - gantt</title>
+    <link
+      rel="stylesheet"
+      href="./schedulerpro.stockholm.css"
+      id="bryntum-theme"
+    />
+    <script data-default-locale="No" src="./schedulerpro.locale.No.js"></script>
+    <link rel="stylesheet" href="./main.css" />
+    <link rel="stylesheet" href="./shared.css" />
+    <link rel="icon" href="data:," />
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.28/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.28/"></script>
+    <!-- <script type="module" src="map.js"></script> -->
+    <script>
+      require(["esri/views/MapView", "esri/WebMap"], (MapView, WebMap) => {
+        /************************************************************
+         * Creates a new WebMap instance. A WebMap must reference
+         * a PortalItem ID that represents a WebMap saved to
+         * arcgis.com or an on-premise portal.
+         *
+         * To load a WebMap from an on-premise portal, set the portal
+         * url with esriConfig.portalUrl.
+         ************************************************************/
+        const webmap = new WebMap({
+          portalItem: {
+            // autocasts as new PortalItem()
+            id: "085ba2cd762648eca3a0157f108f4eca",
+            portal: {
+              url: "https://veidekke.cloudgis.no/enterprise",
+            },
+          },
+        });
 
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-	<title>Veidekke - gantt</title>
-  <link rel="stylesheet" href="./schedulerpro.stockholm.css" id="bryntum-theme">
-  <link rel="stylesheet" href="./main.css">
-  <link rel="stylesheet" href="./shared.css">
-	
+        /************************************************************
+         * Set the WebMap instance to the map property in a MapView.
+         ************************************************************/
+        const view = new MapView({
+          map: webmap,
+          container: "mapView",
+        });
+      });
+    </script>
+  </head>
 
+  <body>
+    <div id="container"></div>
+    <div
+      class="b-widget b-splitter b-outer b-windows b-visible-scrollbar b-chrome b-vertical"
+      role="presentation"
+      id="b-splitter-1"
+    ></div>
+    <div id="mapView"></div>
 
-</head>
-
-<body>
-	<div id="container">
-	</div>
-	<!-- Using Ecma Modules bundle -->
-  <script data-default-locale="No" src="./schedulerpro.locale.No.js"></script>
-  <script type="module" src="app.js"></script>
-</body>
-
+    <!-- <script type="module" src="map.js"></script> -->
+    <script type="module" src="app.js"></script>
+  </body>
 </html>
-

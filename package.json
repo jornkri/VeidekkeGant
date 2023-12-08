@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/jornkri/VeidekkeGant#readme",
   "dependencies": {
+    "@arcgis/core": "^4.28.10",
     "@bryntum/gantt-trial": "^5.6.1",
     "@bryntum/schedulerpro": "npm:@bryntum/schedulerpro-trial@^5.6.2",
     "dayjs": "^1.11.10",
